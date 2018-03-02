@@ -4,12 +4,19 @@ import org.apache.spark.sql.{Row, SQLContext, SparkSession, expressions, functio
 import org.apache.spark.sql.types._
 
 import java.sql.Date
+//spark-submit --class spark.spark_sql --master yarn --deploy-mode cluster target/scala-2.11/Scala4fun-assembly-0.1.jar
 
 object spark_sql {
 
   def top_market_for_region(spark: SparkSession): Unit = {
     import spark.implicits._
-    val dataframe = spark.read.option("header", true).csv("alu4g_cell_combined_20170701.csv")
+//    val dataframe = spark.read.option("header", true).csv("alu4g_cell_combined_20170701.csv")
+//      .select("REGION", "MARKET")
+    //read from hdfs
+    spark.sparkContext.hadoopConfiguration.set("dfs.client.use.datanode.hostname", "true")
+    //spark.sparkContext.hadoopConfiguration.set("dfs.datanode.use.datanode.hostname", "true")
+
+    val dataframe = spark.read.option("header", true).csv("hdfs://hdfsHA4:8020/user/ec2-user/alu4g_cell_combined_20170701.csv")
       .select("REGION", "MARKET")
     dataframe.printSchema()
     dataframe.show()
@@ -92,7 +99,7 @@ object spark_sql {
     //      +---------+--------------+-----+----+
   }
 
-  def page_view_practie(spark: SparkSession) {
+  def page_view_dataframe_practice(spark: SparkSession) {
     import spark.implicits._
     val schema = StructType(
       StructField("date", DateType) ::
@@ -224,12 +231,13 @@ object spark_sql {
     val spark = SparkSession
       .builder
       .appName("spark_sql")
-      .config("spark.master", "local")
+      //.config("spark.master", "local")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-    //top_market_for_region(spark)
-    //page_view_practie(spark)
-    page_view_dataset_practice(spark)
+    top_market_for_region(spark)
+    //page_view_dataframe_practice(spark)
+    //page_view_dataset_practice(spark)
+    spark.stop()
   }
 
 }
