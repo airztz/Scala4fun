@@ -200,11 +200,11 @@ object spark_sql {
     ds.printSchema()
     ds.show()
     //V1:
-    //    val flatDS = ds.flatMap(
-    //      pv => pv.user_ids.map(
-    //        user_id => PageView(pv.date, pv.page_id, user_id)
-    //      )
-    //    )
+//        val flatDS = ds.flatMap(
+//          pv => pv.user_ids.map(
+//            user_id => PageView(pv.date, pv.page_id, user_id)
+//          )
+//        )
     //V2:
     val flatDS = for {
       pv <- ds
@@ -231,12 +231,12 @@ object spark_sql {
     val spark = SparkSession
       .builder
       .appName("spark_sql")
-      //.config("spark.master", "local")
+      .config("spark.master", "local")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-    top_market_for_region(spark)
+    //top_market_for_region(spark)
     //page_view_dataframe_practice(spark)
-    //page_view_dataset_practice(spark)
+    page_view_dataset_practice(spark)
     spark.stop()
   }
 
