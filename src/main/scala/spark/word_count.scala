@@ -23,10 +23,10 @@ object word_count {
     val words = Array("one", "two", "two", "three", "three", "three")
 
     val sparkConf = new SparkConf().setAppName("spark_scala_practice")
-      .setMaster("local[*]")
+      //.setMaster("local[*]")
     val sc = new SparkContext(sparkConf)
     sc.setLogLevel("WARN")
-    sc.hadoopConfiguration.set("dfs.client.use.datanode.hostname", "true")
+    //sc.hadoopConfiguration.set("dfs.client.use.datanode.hostname", "true")
     //sc.hadoopConfiguration.set("dfs.datanode.use.datanode.hostname", "true")
     val wordPairsRDD = sc.parallelize(words).map(word => (word, 1)).cache()
 
@@ -38,6 +38,7 @@ object word_count {
 
     //t: (String, Iterable[Int])
     //V1
+    //t is t: (String, scala.Iterable[Int]), t._2.sum is the sum of all element in scala.Iterable[Int]
     //val wordCountsWithGroup = wordPairsRDD.groupByKey().map(t => (t._1, t._2.sum)).collect()
     //V2
     val wordCountsWithGroup = wordPairsRDD.groupByKey().mapValues(_.sum).collect()

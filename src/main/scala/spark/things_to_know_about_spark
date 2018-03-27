@@ -1,0 +1,35 @@
+https://stackoverflow.com/questions/25276409/what-is-a-task-in-spark-how-does-the-spark-worker-execute-the-jar-file
+
+When you create the SparkContext,
+each worker starts an executor,
+which is a separate process (JVM) that loads your.
+The executors connect back to your driver program.
+Now the driver can send them commands,
+like flatMap, map and reduceByKey.
+When the driver quits, the executors shut down.
+
+RDDs are sort of like big arrays that are split into partitions,
+and each executor can hold some of these partitions.
+
+A task is a command sent from the driver to an executor by serializing your Function object (you know in scala, function is an object),
+like flatMap, map and reduceByKey (transformations and actions)
+The executor deserializes the command (this is possible because it has loaded your jar), and executes it on a partition.
+
+#tasks=#partitions
+
+#cores=# of parallel tasks
+
+each action triggers a job
+                                                wd-t
+a job consists of {                       rdd1    >   rdd2
+                                         stage1  >|  stage2
+                       p1 >  task1:       rdd1  ----> rdd2
+ data: partitions(3)   p2 >  task2:       rdd1   /\/
+                       p3 >  task3:       rdd1  ----> rdd2
+}
+within each stage,  rdd1 = {rdd0>rdd0.1>rdd0.2...>rdd1} ndt happens in between each other rdd
+stages are segregated by wide dependency, wide dependency triggers shuffle
+
+
+
+

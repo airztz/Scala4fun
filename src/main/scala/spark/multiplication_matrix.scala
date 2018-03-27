@@ -3,7 +3,21 @@ package spark
 import org.apache.spark.mllib.linalg.{DenseMatrix, Matrices, Matrix, Vector, Vectors}
 import org.apache.spark.mllib.linalg.distributed.{IndexedRow, IndexedRowMatrix}
 import org.apache.spark.sql.{Row, SQLContext, SparkSession, expressions, functions}
-import org.apache.spark.sql.types._
+
+//submit inside cluster
+//spark-submit --class spark.multiplication_matrix --master yarn --deploy-mode cluster Scala4fun-assembly-0.1.jar
+
+//submit outside a cluster
+//V1 log won't move to spark history server
+//spark-submit --class spark.multiplication_matrix --master yarn --deploy-mode cluster --conf spark.yarn.jars=hdfs://Joy4funCluster/user/ec2-user/spark_jars/*.jar target/scala-2.11/Scala4fun-assembly-0.1.jar
+
+//V2 log will move to spark history server
+//spark-submit --class spark.multiplication_matrix --master yarn --deploy-mode cluster --properties-file spark-defaults.conf target/scala-2.11/Scala4fun-assembly-0.1.jar
+
+//create  spark-defaults.conf
+//spark.eventLog.enabled            true
+//spark.eventLog.dir                hdfs://Joy4funCluster/user/spark/applicationHistory
+//spark.yarn.historyServer.address  hdfsHA5:18080
 
 object multiplication_matrix {
 
@@ -48,8 +62,10 @@ object multiplication_matrix {
           }
         }
       }.groupByKey().mapValues(_.toList)
-    //    println("\n"+M1.collect().mkString("|"))
-    //    println("\n"+M2.collect().mkString("|"))
+    println("\n"+M1.collect().mkString("|"))
+    println(M1.getNumPartitions)
+    println("\n"+M2.collect().mkString("|"))
+    println(M2.getNumPartitions)
     val production_RDD = M1.cartesian(M2)
       .map{case((row: Long, vector1: List[Double]),(col: Long, vector2: List[Double]))=>((row,col),dot_product(vector1,vector2))}
     //
@@ -59,11 +75,11 @@ object multiplication_matrix {
   def main(args: Array[String]) {
 
     // Create a dense vector (1.0, 0.0, 3.0).
-    val dv: Vector = Vectors.dense(1.0, 0.0, 3.0)
+    //val dv: Vector = Vectors.dense(1.0, 0.0, 3.0)
     // Create a sparse vector (1.0, 0.0, 3.0) by specifying its indices and values corresponding to nonzero entries.
-    val sv1: Vector = Vectors.sparse(3, Array(0, 2), Array(1.0, 3.0))
+    //val sv1: Vector = Vectors.sparse(3, Array(0, 2), Array(1.0, 3.0))
     // Create a sparse vector (1.0, 0.0, 3.0) by specifying its nonzero entries.
-    val sv2: Vector = Vectors.sparse(3, Seq((0, 1.0), (2, 3.0)))
+   // val sv2: Vector = Vectors.sparse(3, Seq((0, 1.0), (2, 3.0)))
     //println(sv1)
     //(3,[0,2],[1.0,3.0])
 
@@ -71,28 +87,28 @@ object multiplication_matrix {
     // (1.0, 2.0, 7.0),
     // (3.0, 4.0, 8.0),
     // (5.0, 6.0, 9.0)
-    val dm: Matrix = Matrices.dense(3, 3, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0, 7.0, 8.0, 9.0))
-    val denseM: DenseMatrix = new DenseMatrix(3, 3, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0, 7.0, 8.0, 9.0))
+   // val dm: Matrix = Matrices.dense(3, 3, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0, 7.0, 8.0, 9.0))
+    //val denseM: DenseMatrix = new DenseMatrix(3, 3, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0, 7.0, 8.0, 9.0))
     //println(denseM)
     // Create a sparse matrix (
     // (9.0, 0.0),
     // (0.0, 8.0),
     // (0.0, 6.0))
     // colPtrs: 0, 1, 3  <-----  \9,\ 8, 6\
-    val sm: Matrix = Matrices.sparse(3, 2, Array(0, 1, 3), Array(0, 1, 2), Array(9, 8, 6))
+   // val sm: Matrix = Matrices.sparse(3, 2, Array(0, 1, 3), Array(0, 1, 2), Array(9, 8, 6))
     //https://stackoverflow.com/questions/44825193/how-to-create-a-sparse-cscmatrix-using-spark
     //println(sm)
     //    3 x 2 CSCMatrix
     //    (0,0) 9.0
     //    (1,1) 8.0
     //    (2,1) 6.0
-    val product_dens_dens = denseM.multiply(denseM)
-    val product_dm_dv = dm.multiply(dv)
+  //  val product_dens_dens = denseM.multiply(denseM)
+  //  val product_dm_dv = dm.multiply(dv)
 
 
     val spark = SparkSession
       .builder
-      .appName("spark_sql")
+      .appName("spark_matrix")
       .config("spark.master", "local")
       .getOrCreate()
     spark.sparkContext.setLogLevel("WARN")

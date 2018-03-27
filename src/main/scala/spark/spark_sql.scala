@@ -2,8 +2,8 @@ package spark
 
 import org.apache.spark.sql.{Row, SQLContext, SparkSession, expressions, functions}
 import org.apache.spark.sql.types._
-
 import java.sql.Date
+
 //spark-submit --class spark.spark_sql --master yarn --deploy-mode cluster target/scala-2.11/Scala4fun-assembly-0.1.jar
 
 object spark_sql {
@@ -16,7 +16,7 @@ object spark_sql {
     spark.sparkContext.hadoopConfiguration.set("dfs.client.use.datanode.hostname", "true")
     //spark.sparkContext.hadoopConfiguration.set("dfs.datanode.use.datanode.hostname", "true")
 
-    val dataframe = spark.read.option("header", true).csv("hdfs://hdfsHA4:8020/user/ec2-user/alu4g_cell_combined_20170701.csv")
+    val dataframe = spark.read.option("header", true).csv("hdfs://Joy4funCluster/user/ec2-user/alu4g_cell_combined_20170701.csv")
       .select("REGION", "MARKET")
     dataframe.printSchema()
     dataframe.show()
@@ -227,6 +227,23 @@ object spark_sql {
       .orderBy($"PAGE_COUNT".desc).show()
   }
 
+  case class record(id: Int, value: String)
+
+  def regular_join(spark: SparkSession): Unit ={
+
+    import spark.implicits._
+    val r1 = spark.createDataset(Seq(record(1, "A1"), record(2, "A2"), record(3, "A3"), record(4, "A4")))
+    val r2 = spark.createDataset(Seq(record(3, "A3"), record(4, "A4"), record(4, "A4_1"), record(5, "A5"), record(6, "A6")))
+
+    val joinTypes = Seq("inner", "outer", "full", "full_outer", "left", "left_outer", "right", "right_outer", "left_semi", "left_anti")
+
+    joinTypes foreach {joinType =>
+      println(s"${joinType.toUpperCase()} JOIN")
+      r1.join(right = r2, usingColumns = Seq("id","value"), joinType = joinType).orderBy("id").show()
+      //r1.join(r2, r1.col("id")===r2.col("id"), joinType).orderBy("id").show() doesn't work
+    }
+  }
+
   def main(args: Array[String]) {
     val spark = SparkSession
       .builder
@@ -236,7 +253,8 @@ object spark_sql {
     spark.sparkContext.setLogLevel("WARN")
     //top_market_for_region(spark)
     //page_view_dataframe_practice(spark)
-    page_view_dataset_practice(spark)
+    //page_view_dataset_practice(spark)
+    regular_join(spark)
     spark.stop()
   }
 
