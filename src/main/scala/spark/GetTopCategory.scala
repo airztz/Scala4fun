@@ -53,7 +53,7 @@ object GetTopCategory {
 
     val accessLogRDD = spark.read.textFile("access_log_sample")
      .filter(line => line.matches(".*&url=(https:|http:|https%3A|http%3A)//play.google.com/store/apps/details.*"))
-        //Here we cant use mapPartitions instead of map
+        //Here we should use mapPartitions instead of map
       .mapPartitions { lines =>
           val ipLookups = IpLookups(geoFile = Some(SparkFiles.get("GeoLiteCity.dat")))
           lines.map(line => udf(line, ipLookups))
